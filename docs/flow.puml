@@ -1,0 +1,40 @@
+@startuml
+hide footbox
+autonumber 1 1 "[00]"
+
+actor user
+
+== get an SSO token ==
+
+user -> index.html: http get http://localhost:3000
+activate user
+activate index.html
+index.html -> index.html: init myMSALObj
+index.html -> index.html: getToken via Redirect
+index.html -> user: http 302 tO AAD server
+deactivate index.html
+user -> AAD: login or get token
+activate AAD
+AAD -> AAD: check user login, \nsession and entitlements\n for this enterprise app
+AAD -> user: http 302 to http://localhost:3000
+deactivate AAD
+
+== get data from the API ==
+
+user -> index.html: http get http://localhost:3000 \n(with SSO token)
+activate index.html
+index.html -> API: http-request API (forward SSO token)
+activate API
+API -> AAD: validate token
+activate AAD
+AAD -> AAD: check user login, \nsession and entitlements\n for this enterprise app
+AAD -> API: response token valid, user entitled
+deactivate AAD
+API -> API: is user entitled?
+API -> index.html: http-response with data
+deactivate API
+
+index.html -> user: display data
+deactivate index.html
+
+@enduml

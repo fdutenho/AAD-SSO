@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>MSAL.js test</title>
+    <script type="text/javascript" src="https://alcdn.msauth.net/browser/2.0.0-beta.4/js/msal-browser.js" integrity="sha384-7sxY2tN3GMVE5jXH2RL9AdbO6s46vUh9lUid4yNCHJMUzDoj+0N4ve6rLOmR88yN" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  </head>
+  <body>
+    <button type="button" id="SignIn" class="btn btn-secondary" onclick="signIn()">
+      Sign In
+    </button>
+    <br><br>
+    <button type="button" id="getToken" class="btn btn-warning" onclick="getTokenRedirect()">
+      Get Token
+    </button>
+    <br><br>
+    <div id="token-div" style="border:1px solid black;"></div>
+    <br><br>
+    <button type="button" id="getData" class="btn btn-primary" onclick="getData()">
+      Get Data
+    </button>
+    <br><br>
+    <div id="content-div" style="border:1px solid black;"></div>
+    <script type="text/javascript">
+      let accessToken
+      let username = ""
+
+      // MS auth lib config
+      const msalConfig = {
+        auth: {
+          clientId: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+          authority: "https://login.microsoftonline.com/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+          redirectUri: "http://localhost:3000",
+        },
+        cache: {
+          cacheLocation: "sessionStorage",
+          storeAuthStateInCookie: false,
+        }
+      }
+
+      //instanciate the MS auth lib
+      const myMSALObj = new msal.PublicClientApplication(msalConfig)
+      console.debug("myMSALObj created: " + JSON.stringify(myMSALObj))
+
+      myMSALObj.handleRedirectPromise()
+        .then(resp => {
+          if (resp !== null) {
+            // you are logged :-)
+            console.debug(JSON.stringify(resp))
+            //store username and  - first and foremost - token
+            username = resp.account.username
+            accessToken=resp.accessToken
+            displayToken(resp.accessToken)
+          } else {
+            return
+          }
+        })
+        .catch(err => {
+            console.error(err)
+        })
+
+      function displayToken(token) {
+        document.getElementById("token-div").innerHTML = "<strong>Token: </strong>" + token
+      }
+
+      function signIn() {
+        var loginRequest = {
+          scopes: ["openid"]
+        }
+        myMSALObj.loginRedirect(loginRequest)
+      }
+
+      function signOut() {
+          const logoutRequest = {
+              account: myMSALObj.getAccountByUsername(username)
+          }
+          myMSALObj.logout(logoutRequest)
+          document.getElementById("SignIn").setAttribute("onclick", "signIn();")
+          document.getElementById("SignIn").setAttribute('class', "btn btn-success")
+          document.getElementById("SignIn").innerHTML = "Sign In"
+      }
+
+      function getTokenRedirect() {
+        console.debug("username: " + username)
+
+        if(username=="") {
+          //console.debug("you have to login")
+          signIn()
+        } else {
+          const tokenRequest = {
+            scopes: ["openid"]
+          }
+          tokenRequest.account = myMSALObj.getAccountByUsername(username)
+          return myMSALObj.acquireTokenSilent(tokenRequest)
+            .then(token => {
+              console.debug("token: " + token.accessToken)
+              document.getElementById("token-div").innerHTML = "<strong>Token: </strong>" + token.accessToken
+              document.getElementById("SignIn").setAttribute("onclick", "signOut()")
+              document.getElementById("SignIn").setAttribute('class', "btn btn-success")
+              document.getElementById("SignIn").innerHTML = "Sign Out"
+              return token.accessToken
+            })
+            .catch(error => {
+              console.warn("silent token acquisition fails. acquiring token using redirect")
+              if (error instanceof msal.InteractionRequiredAuthError) {
+                // fallback to interaction when silent call fails
+                return myMSALObj.acquireTokenRedirect(request)
+              } else {
+                console.warn(error)
+              }
+            })
+        }
+      }
+
+      function getData() {
+        document.getElementById("content-div").innerHTML = "<strong>Data: </strong>"
+        //do not forget to send the SSO token as authorization header
+        axios.get("http://localhost:3000/protected", {
+          headers: {
+            "Accept": "application/json",
+            "Authorization": "Bearer "+accessToken
+          },
+        })
+        .then(data => {
+          console.debug("data: " + JSON.stringify(data.data))
+          document.getElementById("content-div").innerHTML = "<strong>Data: </strong>"+JSON.stringify(data.data)
+        })
+
+      }
+
+      //auto login
+      setTimeout(() => {
+        console.debug("wait 1.5 sec before auto login")
+        //I don't know why the hell I have to wait 1.5 sec... ask Bill Gates ;-)
+        getTokenRedirect()
+      }, 1500)
+    </script>
+  </body>
+</html>

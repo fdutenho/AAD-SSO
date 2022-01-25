@@ -102,3 +102,6 @@ dist
 
 # TernJS port file
 .tern-port
+
+#atom.io save-autorun extension config
+.save.cson

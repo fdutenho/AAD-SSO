@@ -1,0 +1,20 @@
+{
+  "name": "sso-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@azure/msal-browser": "^2.21.0",
+    "@azure/msal-node": "^1.5.0",
+    "express": "^4.17.2",
+    "nodemon": "^2.0.15",
+    "validate-azure-ad-token": "^1.0.1",
+    "yargs": "^17.3.1"
+  }
+}
