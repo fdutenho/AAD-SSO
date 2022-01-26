@@ -28,6 +28,7 @@
     <div id="content-div" style="border:1px solid black;"></div>
     <script type="text/javascript">
       let accessToken
+      let accessTokenTimout
       let username = ""
 
       // MS auth lib config
@@ -55,6 +56,7 @@
             //store username and  - first and foremost - token
             username = resp.account.username
             accessToken=resp.accessToken
+            accessTokenTimout=new Date(resp.expiresOn)
             displayToken(resp.accessToken)
           } else {
             return
@@ -119,6 +121,11 @@
 
       function getData() {
         document.getElementById("content-div").innerHTML = "<strong>Data: </strong>"
+        // test if token timed out or not...
+        if(new Date()>accessTokenTimout) {
+          console.info("accessToken expired at " + accessTokenTimout +". Getting a new token...")
+          getTokenRedirect()
+        }
         //do not forget to send the SSO token as authorization header
         axios.get("http://localhost:3000/protected", {
           headers: {
