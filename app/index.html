@@ -105,6 +105,9 @@
               document.getElementById("SignIn").setAttribute("onclick", "signOut()")
               document.getElementById("SignIn").setAttribute('class', "btn btn-success")
               document.getElementById("SignIn").innerHTML = "Sign Out"
+              username = token.account.username
+              accessToken = token.accessToken
+              accessTokenTimout = new Date(token.expiresOn)
               return token.accessToken
             })
             .catch(error => {
