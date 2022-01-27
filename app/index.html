@@ -127,7 +127,9 @@
         // test if token timed out or not...
         if(new Date()>accessTokenTimout) {
           console.info("accessToken expired at " + accessTokenTimout +". Getting a new token...")
-          getTokenRedirect()
+          setTimeout(() => {
+            getTokenRedirect()
+          }, 1500)
         }
         //do not forget to send the SSO token as authorization header
         axios.get("http://localhost:3000/protected", {
