@@ -109,14 +109,24 @@ The login (inkl. all screens) is handled by AAD.
 
 ### auto login
 
-It seems the there is (at least) one async function in the MS lib that does not await the result or return a promise. Hence, I have to wait 1.5 seconds. Don't ask my why 1.5 seconds - I just played around with the times until I got the shortest time it worked with...
+Setting the handle for the redirect promise allows you the get a token via redirect if there is no active SSO session availabe.
+If there is no `response` on the RedirectPromise, call `getTokenRedirect()` (see above).
 
 ```js
-setTimeout(() => {
-  console.debug("wait 1.5 sec before auto login")
-  //I don't know why the hell I have to wait 1.5 sec... ask Bill Gates ;-)
-  getTokenRedirect()
-}, 1500)
+myMSALObj.handleRedirectPromise()
+  .then(resp => {
+    if (resp !== null) {
+      // you are logged :-)
+      console.debug(JSON.stringify(resp))
+      //store username and  - first and foremost - token
+      username = resp.account.username
+      accessToken=resp.accessToken
+      accessTokenTimout=new Date(resp.expiresOn)
+      displayToken(resp.accessToken)
+    } else {
+      getTokenRedirect()
+    }
+  })
 ```
 
 

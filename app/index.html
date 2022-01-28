@@ -59,7 +59,7 @@
             accessTokenTimout=new Date(resp.expiresOn)
             displayToken(resp.accessToken)
           } else {
-            return
+            getTokenRedirect()
           }
         })
         .catch(err => {
@@ -144,13 +144,6 @@
         })
 
       }
-
-      //auto login
-      setTimeout(() => {
-        console.debug("wait 1.5 sec before auto login")
-        //I don't know why the hell I have to wait 1.5 sec... ask Bill Gates ;-)
-        getTokenRedirect()
-      }, 1500)
     </script>
   </body>
 </html>
